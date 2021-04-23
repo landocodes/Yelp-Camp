@@ -93,7 +93,7 @@ app.use(
   })
 );
 
-const secret = process.env.Secret || 'thisshouldbeabettersecret!';
+const secret = process.env.SECRET || 'thisshouldbeabettersecret!';
 
 
 const store = MongoStore.create({
