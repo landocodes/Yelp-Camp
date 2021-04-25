@@ -22,9 +22,9 @@ const campgroundRoutes = require("./routes/campgrounds");
 const reviewRoutes = require("./routes/reviews");
 const MongoStore = require('connect-mongo');
 
-const DBurl = process.env.dbUrl ||"mongodb://localhost:27017/YelpCamp";
+const dburl = process.env.DB_Url ||"mongodb://localhost:27017/YelpCamp";
 mongoose.connect(
-  DBurl,
+  dburl,
   { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false },
   mongoose.set("useCreateIndex", true)
 );
@@ -43,8 +43,40 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
-app.use(helmet());
 
+const secret = process.env.Secret || 'thisshouldbeabettersecret!';
+
+
+const store = MongoStore.create({
+  mongoUrl: dburl,
+  touchAfter: 24 * 60 * 60,
+  crypto: {
+      secret,
+  }
+});
+
+store.on("error", function (e) {
+  console.log("SESSION STORE ERROR", e)
+})
+
+const sessionConfig = {
+  store,
+  name: "Camp",
+  secret,
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+  },
+};
+
+
+
+app.use(session(sessionConfig));
+app.use(flash());
+app.use(helmet());
 
 
 const scriptSrcUrls = [
@@ -93,36 +125,6 @@ app.use(
   })
 );
 
-const secret = process.env.SECRET || 'thisshouldbeabettersecret!';
-
-
-const store = MongoStore.create({
-  mongoUrl: DBurl,
-  touchAfter: 24 * 60 * 60,
-  crypto: {
-      secret,
-  }
-});
-
-store.on("error", function (e) {
-  console.log("SESSION STORE ERROR", e)
-})
-
-const sessionConfig = {
-  store,
-  name: "Camp",
-  secret,
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    httpOnly: true,
-    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  },
-};
-
-app.use(session(sessionConfig));
-app.use(flash());
 
 app.use(passport.initialize());
 app.use(passport.session());

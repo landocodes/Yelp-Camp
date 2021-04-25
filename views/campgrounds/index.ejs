@@ -35,7 +35,7 @@
 </div>
 <%} %>
 <script >
-  const mapToken = '<%-process.env.MapboxToken%>';
+  const mapToken = '<%-process.env.Mapbox_Token%>';
   const campgrounds = {features: <%-JSON.stringify(campgrounds)%>};
 </script>
 <script src="\javascripts\clustermap.js"></script>
